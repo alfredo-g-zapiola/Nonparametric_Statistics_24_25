@@ -90,6 +90,7 @@ Calculating depth for a given dataset is immediately accomplished by
 typing
 
 ```{r}
+set.seed(20)
 tukey_depth=depth(u=df_bivariate_exp,method='Tukey')
 ```
 
@@ -174,6 +175,7 @@ And check that the obtained result is equal to the one obtained via the
 
 ```{r, class.source="extracode"}
 all(abs(maha_depth-maha_depth_manual)<1e-15) # food for thought: sqrt(2) ^ 2 == 2?
+all.equal(as.vector(maha_depth)+1, as.vector(maha_depth_manual))
 ```
 
 ```{r}
@@ -475,7 +477,7 @@ data.
 
 ## Measuring robustness.
 
-*Breakdown point** 
+*Breakdown point*
 
 
 ```{r}
@@ -513,6 +515,34 @@ lines(x=fracs, y=median.diffs, col="red")
 ```
 
 
+## Empirical Influence function
 
+```{r}
+sim.data <- rnorm(20)
+stat1 <- function(data){base::mean(data)}
+stat2 <- function(data){median(data)}
+
+L = 25
+grid.for.x <- seq(-1.5*min(sim.data), max(sim.data)*1.5, length.out=L)
+
+stat1.0 <- base::mean(sim.data)
+stat2.0 <- stat2(sim.data)
+
+EIF1 <- numeric(L)
+EIF2 <- numeric(L)
+for (i in 1:length(grid.for.x)){
+  sim.data.i <- sim.data
+  sim.data.i[1] <- grid.for.x[i]
+  EIF1[i] <- abs(base::mean(sim.data.i) - stat1.0)
+  EIF2[i] <- abs(stat2(sim.data.i) - stat2.0)
+}
+
+plot(x=grid.for.x, y=EIF1, ylim=c(-.05, .12))
+lines(x=grid.for.x, y=EIF2, col="red")
+
+```
+
+
+https://stat.ethz.ch/R-manual/R-devel/library/boot/html/empinf.html
   
 
