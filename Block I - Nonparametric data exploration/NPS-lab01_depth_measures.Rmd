@@ -1,6 +1,6 @@
 ---
 title: "Lab 01 - Depth measures"
-date: 2024-09-24
+date: 2024-09-24    
 author: "Nonparametric statistics ay 2024/2025"
 output:
   
@@ -48,7 +48,6 @@ library(hexbin)
 library(aplpack)
 library(robustbase)
 library(MDBED)  # plot exponential bivariate distribution
-library(mrfDepth) # Simplicial depth
 ```
 
 ## Computing depths with R: some general ideas
@@ -98,7 +97,7 @@ It may be useful (spoiler alert, it will become apparent why when we study onpar
 point relative to a sample. You can do it by:
 
 ```{r}
-depth(u = c(0, 0), X = df_bivariate_exp, method = 'Tukey') 
+depth(u = c(0.5, 0.5), X = df_bivariate_exp, method = 'Tukey') 
 ```
 
 Compute the median (deepest point) with `depthMedian` function
@@ -118,7 +117,7 @@ visualize the depth surface in a very convenient way. `DepthProc` offers
 you two possible methods:
 
 ```{r}
-depthContour(df_bivariate_exp,depth_params = list(method='Tukey'))
+DepthProc::depthContour(df_bivariate_exp,depth_params = list(method='Tukey'))
 ```
 
 or
@@ -134,6 +133,7 @@ depthPersp(df_bivariate_exp,depth_params = list(method='Tukey'),plot_method = 'r
 ```
 
 ##### Computational caveat
+
 Since the Tukey depth is obtained by counting points in the space of all hyperplanes(surfaces) in $\mathbb{R}^d$, when $d>2$, the computational burden increases. 
 Libraries usually recur to heuristic methods which lead to poor estimates (we will see this in the functional data depth measures lab)
 ```{r}
@@ -144,7 +144,13 @@ a = depthPersp(df_bivariate_exp,depth_params = list(method='Tukey'))
 
 
 The very same analysis can be carried out by considering a different
-depth measure:
+depth measures:
+
+Simplicial (or Liu) depth:
+```{r}
+mrfDepth::sdepth(df_bivariate_exp)$depthZ
+```
+and now Mahalanobis depth
 
 ```{r}
 maha_depth <- depth(df_bivariate_exp,method='Mahalanobis') 
@@ -466,3 +472,47 @@ ddPlot(x = df_extra, df_good,depth_params=list(method='Tukey'))
 
 Indeed this time we can conclude the same distribution generated the
 data.
+
+## Measuring robustness.
+
+*Breakdown point** 
+
+
+```{r}
+fracs <- seq(0.1, .5, length.out=25)
+set.seed(41703192)
+n_good <- 100
+df.clean <- data.frame(mvrnorm(n_good, mu_good, sigma_common))
+multivar.mean.clean <- colMeans(df.clean)
+multivar.median.clean <- depthMedian(df.clean,depth_params = list(method='Tukey'))
+
+mean.diffs <- numeric(length(fracs))
+median.diffs <- numeric(length(fracs))
+
+for (i in 1:length(fracs)){
+  n=100
+  # sample points
+  frac <- fracs[i]
+  n_good=ceiling(n*(1-frac))
+  n_outliers=n-n_good
+  
+  df_contaminated_normals = data.frame(rbind(
+  as.matrix(df.clean[1:n_good, ]),
+  mvrnorm(n_outliers, mu_outliers, sigma_common)
+  ))
+  current.mean <- colMeans(df_contaminated_normals)
+  current.median <- depthMedian(df_contaminated_normals, depth_params = list(method='Tukey'))
+
+  mean.diffs[i] <- max(abs(current.mean - multivar.mean.clean) )
+  median.diffs[i] <- max(abs(current.median - multivar.median.clean))
+}
+
+plot(x=fracs, y=mean.diffs, main="Empirical Breakdown point")
+lines(x=fracs, y=median.diffs, col="red")
+
+```
+
+
+
+  
+
