@@ -1,7 +1,7 @@
 ---
 title: "Lab 02 - Depth measures for functional data"
-date: 2023/09/26
-author: "Nonparametric statistics ay 2023/2024"
+date: 2024/09/27
+author: "Nonparametric statistics ay 2024/2025"
 output:
   
   html_document: 
@@ -9,12 +9,12 @@ output:
   pdf_document: default
   html_notebook: 
     df_print: paged
+    toc: true 
   word_document: default
 editor_options: 
   chunk_output_type: console
   markdown: 
     wrap: 72
-
 ---
 
 ```{r setup, include=FALSE}
@@ -64,14 +64,14 @@ Given its ubiquitous presence in applications FDA has been a very active
 research field in the past decades, with a plethora of R packages
 developed for helping practitioner efficiently and effectively employ
 such techniques. In what follows we will focus our attention on the
-`roahd` (\*RObust Analysis of High Dimensional Data) package (developed
-by members and former members of our Department of Mathematics): a
+`roahd` (RObust Analysis of High Dimensional Data) package **(developed
+by members and former members of our Department of Mathematics)**: a
 package meant to collect and provide methods for the analysis of
 univariate and multivariate functional datasets through the use of
 robust methods. First off we will dedicate some time in understanding
-how to represent these complex infinite dimensional objects (our
+ **how to represent these complex infinite dimensional objects (our
 computers only deal with finite approximations) and how to simulate
-functional data. We will then focus on computation of depths and outlier
+functional data** . We will then focus on computation of depths and outlier
 detection. This lab WILL NOT provide a thorough treatment of FDA, but we
 will limit to study some introductory concepts on how to deal with
 univariate (and bivariate, only very briefly) functional datasets.
@@ -288,7 +288,18 @@ with the "**center-outward order**", whereas in FDA we try to obtain a
 Epigraph Index (EI) and Hypograph Index (HI) or their corresponding
 Modified versions (MEI and MHI) for providing down-upward/up-downward
 order of data can also be computed: see functions `EI`, `HI`, `MEI`,
-`MHI`. As an example, let us compute the Spearman's correlation index
+`MHI`. 
+
+We recall the definition of the (sample) Modified Epigraph Index (MEI):
+$$
+MEI(f_i) = N^{-1} \sum_{i\neq j} \lambda ( \{t \in \mathcal{I}: f_j(t) \geq f_i(t) \})
+$$
+that is: for the $i$th function, the mean, with respect to all other functions $j$  of the lebesgue measure, ie. total time or total length of subset of domain, such that the $j$th function has a higher value than the $i$ one.
+
+For the Hypograph index, we just change the sign: we look for the "total" time that in mean
+
+
+As an example, let us use them to compute the Spearman's correlation index
 between the first and second lead of the ECG signals. Recall that for a
 bivariate functional dataset $[\mathbf{x}, \mathbf{y}]$, the estimate
 for Spearman's correlation index

@@ -6,6 +6,7 @@ output:
   
   html_document: 
     df_print: paged
+    toc: true
   pdf_document: default
   html_notebook: 
     df_print: paged
@@ -288,7 +289,7 @@ bagplot(df_contaminated_normals, factor = 3, show.whiskers = T)
 
 *Remember*:
 
-* The *bag* is composed of the deepest 50% of the data (i.e. $C_{.5}$)
+* The *bag* is composed of the deepest 50% of the data (not to be confounded with the $.50$th central region $C_{.5}$, i.e. the smallest region enclosed by depth contours with at least probability $.50$: for that we would need to know the probability density function of the distribution the data came from!)
 * The *fence* separates the outliers from the other observations
 * The *loop* contains data between the bag and the fence
 * Naturally, the median (i.e. the deepest datum) is inside the bag.
@@ -477,7 +478,7 @@ data.
 
 ## Measuring robustness.
 
-*Breakdown point*
+### *Breakdown point*
 
 
 ```{r}
@@ -515,7 +516,7 @@ lines(x=fracs, y=median.diffs, col="red")
 ```
 
 
-## Empirical Influence function
+### Empirical Influence function
 
 ```{r}
 sim.data <- rnorm(20)
@@ -542,7 +543,28 @@ lines(x=grid.for.x, y=EIF2, col="red")
 
 ```
 
+### Empirical influence value
 
-https://stat.ethz.ch/R-manual/R-devel/library/boot/html/empinf.html
+An alternative is the **empirical influence value**: the (estimated) the derivative of a sample estimator with respect to each statistical unit in the sample of its input. One must be careful on the definition of the statistic. It is implemented in the `boot` package and the statistic (i.e. a functional of the sample),  has to be an (R) function of the data matrix and **a vector of weights**, i.e the weight associated to each statistical unit (row in the matrix), see more information [here](https://stat.ethz.ch/R-manual/R-devel/library/boot/html/empinf.html)
+
+For simplicity, we try it with the $t$ statistic on univariate data: $t(\mathbb{X}) = \frac{\hat{\mu}(\mathbb{X})-\mu_0}{\hat{\sigma}(\mathbb{X})}$
+where $\mathbb{X}$ denotes the data sample, with $hat{\mu}(\mathbb{X})$ denoting the sample mean, $\mu_0$ a hypothesised mean and $\hat{\sigma}(\mathbb{X})$ the sample standard deviation
+
+```{r}
+library(boot)
+
+mean.statistic <- function(data, w){
+  return ()
+}
+
+
+```
+
+
+
+
+
+
+
   
 
