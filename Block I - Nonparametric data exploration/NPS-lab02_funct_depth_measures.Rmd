@@ -268,11 +268,11 @@ f_data = fData(grid=grid, values=data)  # cast to fData
 plot(f_data)
 median.mbd =  median_fData(fData = f_data, type = "MBD")
 
-lines(grid, median.mbd$values, col="black")
+lines(grid, median.mbd$values, col="black", lwd=5)
 library(DepthProc)
 tukey.depth=depth(u=f_data$values,method='Tukey')
 tukey.deepest.idx = which(tukey.depth==max(tukey.depth))
-lines(grid, f_data$values[tukey.deepest.idx[1],], col="red")
+lines(grid, f_data$values[tukey.deepest.idx[1],], col="red", lwd=5)
 
 ```
 
@@ -283,7 +283,7 @@ estimation. Remember, in the multivariate setting, depth measures deal
 with the "**center-outward order**", whereas in FDA we try to obtain a
 "**down-upward order**".
 
-### Spearman's correlation index for functiona data
+### Spearman's correlation index for functional data
 
 Epigraph Index (EI) and Hypograph Index (HI) or their corresponding
 Modified versions (MEI and MHI) for providing down-upward/up-downward
@@ -296,7 +296,11 @@ MEI(f_i) = N^{-1} \sum_{i\neq j} \lambda ( \{t \in \mathcal{I}: f_j(t) \geq f_i(
 $$
 that is: for the $i$th function, the mean, with respect to all other functions $j$  of the lebesgue measure, ie. total time or total length of subset of domain, such that the $j$th function has a higher value than the $i$ one.
 
-For the Hypograph index, we just change the sign: we look for the "total" time that in mean
+For the Hypograph index, we just change the sign: we count the mean "time" other functions have a lower value than the $i$th one.
+
+The sample  $IL_{n}\operatorname{grade}(x_i)$ for the $i$th corresponds to the `MEI`, except that the divisor of the sum also takes into account the length of the interval over which we measure the functions. Same goes for $SL_{n}\operatorname{grade}(x_i)$.
+
+
 
 
 As an example, let us use them to compute the Spearman's correlation index
@@ -311,8 +315,8 @@ $$ where $\hat{\rho}_{p}$ is the sample Pearson correlation coefficient
 and $I L\operatorname{grade}_{n}$ is the Inferior-Length w.r.t the
 sample and $$
 \begin{aligned}
-&I L_{n}-\operatorname{grade}(\mathbf{x})=\left(I L_{n}-\operatorname{grade}\left(x_{1}\right), I L_{n}-\operatorname{grade}\left(x_{2}\right), \ldots, I L_{n}-\operatorname{grade}\left(x_{n}\right)\right) \\
-&I L_{n}-\operatorname{grade}(\mathbf{y})=\left(I L_{n}-\operatorname{grade}\left(y_{1}\right), I L_{n}-\operatorname{grade}\left(y_{2}\right), \ldots, I L_{n}-\operatorname{grade}\left(y_{n}\right)\right) .
+&I L_{n}\operatorname{grade}(\mathbf{x})=\left(I L_{n}\operatorname{grade}\left(x_{1}\right), I L_{n}\operatorname{grade}\left(x_{2}\right), \ldots, I L_{n}\operatorname{grade}\left(x_{n}\right)\right) \\
+&I L_{n}\operatorname{grade}(\mathbf{y})=\left(I L_{n}\operatorname{grade}\left(y_{1}\right), I L_{n}\operatorname{grade}\left(y_{2}\right), \ldots, I L_{n}\operatorname{grade}\left(y_{n}\right)\right) .
 \end{aligned}
 $$ where the inferior length grade $I L\operatorname{grade}_{n}(x_i)$
 can be interpreted as the "proportion of time" that the sample
