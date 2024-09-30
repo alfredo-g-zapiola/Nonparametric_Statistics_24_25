@@ -546,22 +546,7 @@ lines(x=grid.for.x, y=EIF2, col="red")
 ### Empirical influence value
 
 An alternative is the **empirical influence value**: the (estimated) the derivative of a sample estimator with respect to each statistical unit in the sample of its input. One must be careful on the definition of the statistic. It is implemented in the `boot` package and the statistic (i.e. a functional of the sample),  has to be an (R) function of the data matrix and **a vector of weights**, i.e the weight associated to each statistical unit (row in the matrix), see more information [here](https://stat.ethz.ch/R-manual/R-devel/library/boot/html/empinf.html)
-
-For simplicity, we try it with the $t$ statistic on univariate data: $t(\mathbb{X}) = \frac{\hat{\mu}(\mathbb{X})-\mu_0}{\hat{\sigma}(\mathbb{X})}$
-where $\mathbb{X}$ denotes the data sample, with $hat{\mu}(\mathbb{X})$ denoting the sample mean, $\mu_0$ a hypothesised mean and $\hat{\sigma}(\mathbb{X})$ the sample standard deviation
-
-```{r}
-library(boot)
-
-mean.statistic <- function(data, w){
-  return ()
-}
-
-
-```
-
-
-
+  
 
 
 
