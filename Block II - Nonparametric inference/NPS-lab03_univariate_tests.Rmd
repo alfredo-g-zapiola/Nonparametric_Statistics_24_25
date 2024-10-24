@@ -857,7 +857,7 @@ since data are univariate and i.i.d, we can apply a sign test.
 
 Having that:
 $$
-N-w \stackrel{H_0}{\sim} Binomial(N, .90)
+(N-w) \stackrel{H_0}{\sim} Binomial(N, .90)
 
 $$
 
@@ -868,6 +868,7 @@ plot(0:N, dbinom(0:N, N, 0.9))
 abline(v = c(w), col='red')
 
 ```
+
 Since the Binomial distribution is no longer symmetric (whenever its probability parameter is different from $0.5$), the calculation of the p-value is more complex, _i.e._ we cannot take one tail's mass and double it anymore ^[See https://en.wikipedia.org/wiki/Binomial_test for details]
 
 As we saw before, once we build the statistic, we can apply the function:
@@ -910,7 +911,7 @@ W.minus <- sum(ranks[Y < 0])
 W.plus
 W.minus
 n*(n+1)/2
-#W <- W.plus - W.minus 
+W <- W.plus - W.minus 
 # W <- sum(sign(differences)*rank(abs(differences)))
 #W
 
@@ -927,10 +928,10 @@ for (k in 1:B)
 }
 
 hist(W.sim, xlim=c(-n*(n+1)/2, n*(n+1)/2), breaks = 50)
-abline(v = W.plus, col='red')
+abline(v = W, col='red')
 abline(v = 0, lwd=3)
 
-
+sum(W >= W.sim)/B
 
 ```
 

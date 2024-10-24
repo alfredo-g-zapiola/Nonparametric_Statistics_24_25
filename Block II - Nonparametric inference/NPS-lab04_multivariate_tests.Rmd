@@ -19,7 +19,7 @@ editor_options:
 ```{r setup, include=FALSE}
 library(rgl)
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(cache = F)
+knitr::opts_chunk$set(cache = T)
 knitr::knit_hooks$set(webgl = hook_webgl)  # per il plot 3D
 ```
 
@@ -735,7 +735,7 @@ sum(T_chicks >= T0)/B
 
 Let's see what happens instead when using `lmPerm`
 
-```{r, eval=T}
+```{r, eval=F}
 library(lmPerm)
 lmp=aovp(weight_perm ~ chickwts$feed,
          perm="Prob",
@@ -745,14 +745,14 @@ summary(lmp)
 
 let's reduce the expected standard error...
 
-```{r, eval=T}
+```{r, eval=F}
 lmp=aovp(weight_perm ~ chickwts$feed,perm="Prob",Cp=1e-6)
 summary(lmp)
 ```
 
 and let's run the instruction several times
 
-```{r, eval=T}
+```{r, eval=F}
 lmp=aovp(weight_perm ~ chickwts$feed,perm="Prob",Cp=1e-6)
 summary(lmp)
 
@@ -1357,13 +1357,27 @@ plot(data)
 
 We test: 
 $$
-H_0: X \ind Y \,\,\,\, versus H_1 X TODO Y
+H_0: X \!\perp\!\!\!\perp Y \,\,\, versus \,\,\, H_1: X \not\!\perp\!\!\!\perp Y
 $$
 and the test statistic is the samples squared correlation coefficient.
 
 Under $H_0$, they are independent, so **within each vector**, we can permute the statistical units.
 
 ```{r}
+
+T0 <- cor(data[,1], data[,2])^2
+n <- nrow(data)
+
+T0.perm.distrib <- numeric(B)
+
+for(perm in 1:B){
+  permutation.x <- sample(n)
+  permutaiton.y <- sample(n)
+  T0.perm.distrib[perm] <- cor(data[permutation.x,1], 
+                               data[permutaiton.y,2])
+  }
+
+sum(T0.perm.distrib >=T0)/B
 
 ```
 
