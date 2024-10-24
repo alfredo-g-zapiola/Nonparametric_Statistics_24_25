@@ -7,8 +7,6 @@ output:
     df_print: paged
     toc: true
   pdf_document: default
-  html_notebook: 
-    df_print: paged
   word_document: default
 editor_options: 
   chunk_output_type: console
