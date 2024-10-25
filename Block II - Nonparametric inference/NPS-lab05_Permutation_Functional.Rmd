@@ -150,6 +150,25 @@ hist(T0_perm,xlim = c(0,300))
 abline(v=T0,col='green')
 ```
 
+## Permutation global test for equality of functional populations: other statistics
+
+* To compare two functional populations, Hotelling's $T^2$ statistic for functional data:
+
+```{r}
+library(fdahotelling)
+
+t <- test_twosample(
+  x = t(data$hgtm), 
+  y = t(data$hgtf), 
+  step_size = 0.01, 
+  B = 100L
+)
+t$statVal
+
+```
+
+#### Exercise: implement by yourselfa global test using this statistics.
+
 
 ## Example: last year's January exam
 
@@ -370,7 +389,7 @@ p.value
 
 Now, what I am doing here is basically is testing the hypothesis globally, I am rejecting if, for at least one time instant $t$ the two curves are statistically different. How do I tell what is that specific time instant? I use a procedure called Interval-wise Testing.
 
-## A first look: January's exam
+## A first look: the p-value function
 
 2. Provide the (point-wise) mean of each group. Add them the last plot. Calculate the pointwise p-value of the permutation test using as test statistic the (absolute) difference of the means and interpret your results.
 
@@ -386,22 +405,18 @@ lines(time, mean.low,col="black")
 And now perform the point-wise test. This means we have a family of hypothesis tests:
 
 $$
-H_{0,s} = \mathbb{E}[X(s)] = \mu(s)\; vs. \; H_{1,s} : \mathbb{E}[X(s)] \neq \mu(s); \; s \in \mathcal{S}
+H_{0,s} = X(s) = Y(s)\; vs. \; H_{1,s} : X(s) \neq Y(s); \; s \in \mathcal{S}
 $$
-where again $X(s)$
-By fixing $s$, we have a typical univariate permutation test for a hypothesised mean. So let us compute with the same loop all the different p-values of the different tests (one for each $s \in \mathcal{S}$), in an analogos way to what we did with the Bootstrap.
-We take 
-$$\mu(s) = 0.63, \forall s \in \mathcal{S}$$
-And compute the point-wise test statistic:
+where again $X(s)$.
+
+By fixing $s$, we have a typical univariate permutation test for two populations. So let us compute with the same loop all the different p-values of the different tests (one for each $s \in \mathcal{S}$)
+
+W compute the point-wise test statistic:
 $$
-T(s) = |\hat{\mu}(s) - \mu(s) |\; \forall s \in \mathcal{S}
+T(s) = |\hat{\mu}_X(s) - \hat{\mu}_Y(s) |\; \forall s \in \mathcal{S}
 $$
 where $\hat{\mu}(s)$ is the sample mean at $s$.
-```{r,eval=F}
-mu.H0 <- 0.063
-T0s <- abs(apply(func.data.sample, MARGIN=2, FUN=mean) - mu.H0)
-```
-And now we estimate the permutational distribution conditional on sample `func.data.sample` at point $s$
+
 
 1. Estimate permutational distribution of the test statistic at each $s$
 2. Compute p-value of every test $s \in \mathcal{S}$
@@ -437,107 +452,137 @@ plot(time, pval.fun, ylim=c(0,1))
 ```
 
 
-### Permutation tests for functional data: unadjusted p-value function
+## Interval-wise tests for functional data: the adjusted p-value function
+
+
+
+For this section of the lab, we will use the following data set:
+
+```{r}
+library(fdatest)
+data(NASAtemp)
+
+matplot(1:365,t(NASAtemp$milan), type='l',col='blue',ylab="temperature", xlab="day of year",
+        main="NASA temperature")
+matlines(1:365,t(NASAtemp$paris), type='l',col='red')
+
+```
+
+How is Interval-Wise testing implemented?
+
 
 **Details on the implementation**.
 
-As all FDA techniques, the procedure to
-evaluate the unadjusted and adjusted p-value functions and select the significant intervals of the domain described in Section 2 has to be numerically approximated to deal with the analysis of real data.
+_As all FDA techniques, the procedure to evaluate the unadjusted and adjusted p-value functions and select the significant intervals of the domain described in Section 2 has to be numerically approximated to deal with the analysis of real data._ (cf. [the article](https://re.public.polimi.it/bitstream/11311/1022750/4/11311-1022750_Vantini.pdf))
+
 
 * _Step 1_ : **smoothing**.
 
-* _Step 2_: pointwise p-value function
+We need to be able to evaluate on a sufficiently fine grid, so firstly we smooth the functional data. You will see more on nonparametric regression... although for `fda` you could do something like this
+
+* _Step 2_: pointwise p-value function:
+
+depending on the test, whether it is two populations, location or regression, the point-wise p-value function is computed, just as before.
 
 * _Step 3_ interval-wise p-value function
 
+The maximum of the estimated p-value function is taken over intervals for the interval-wise error rate control.
 
-Coherently with previous analyses of the Canadian daily temperature dataset presented in the literature (Ramsay and Silverman 2005), the functional data have been obtained by means of a Fourier smoothing on 65 harmonics. The number of harmonics was selected through a cross-validation procedure.
-The test statistic (3) is evaluated by means of a numerical integration method,
-through a trapezoidal rule based on a fine uniform grid of 365 knots. The same
-evaluation is used to perform the test proposed by Vsevolozhskaya et al. (2014).
-Since the number of permutations of the data to be explored to evaluate the
-p-values is extremely high in at least some of the studied cases, a Conditional
-Monte Carlo (CMC) algorithm is applied to estimate the p-values of the tests
-of HI
-0
-against HI
-1
-for any interval I (Pesarin and Salmaso 2010). In the case of
-the analysis reported in this section a CMC algorithm based on 1000 randomly
-chosen permutations was employed. Note that, to decrease the computational
-cost of the permutation method applied to any interval I, it is possible to perform
-all tests based on the same set of permutations.
-Finally, the p-values of the tests HI
-0
-against HI
-1
-for any interval I are discretized on a sufficiently fine grid. Relying on the continuity of the test statistic
-(3) with respect to the extremes of the integration interval, the max and lim sup
-of Definition 2.1 have been approximated with their discrete counterparts.
+### IWT test for location
 
+We have a functional data set, and he hypothesise if a function $m(t)$ is the true location of functional population..
 
+Let us try with a constant function: $m(t)=4$.
 
+```{r, eval=F}
 
-```{r,eval=F}
-T.s.B = matrix(nrow=B, ncol=length(grid)) 
-n <- dim(func.data.sample)[1]
-p <- dim(func.data.sample)[2]
+# Performing the ITP for two populations with the B-spline basis
+ITP.result <- ITP1bspline(NASAtemp$paris,mu=4,nknots=50,B=1000)
 
-set.seed(SEED)
-for(b in 1:B){
-
-  # Permuted dataset (reflection-based)
-  signs.perm = rbinom(n, 1, 0.5)*2 - 1
-  
-  func.perm = mu.H0 + (func.data.sample - mu.H0) * matrix(signs.perm, nrow=n,ncol=p,byrow=FALSE)
-  
-  
-  T.s.B[b, ]  = apply(func.perm, MARGIN=2, FUN=function(x) abs(mean(x)-mu.H0) )
-}
-# compute element-wise p-values
-p.vals <- sapply(1:p, function(i) sum(T.s.B[,i]>=T0s[i])/B )
+# Plotting the results of the ITP
+plot(ITP.result,xrange=c(0,12),main='Paris temperatures')
+# Plotting the p-value heatmap
+ITPimage(ITP.result,abscissa.range=c(0,12))
+# Selecting the significant components for the radius at 5% level
+which(ITP.result$corrected.pval < 0.05)
 
 ```
-So let us plot firstly the functional dataset with the hypothesised mean:
-```{r,eval=F}
-matplot(t(func.data.sample), type="l", col="black")
-lines(m1, col="red")
-lines(apply(func.data.sample, MARGIN=2, FUN=mean), col="turquoise")
-lines(rep(mu.H0, P), col="green")
-```
 
-And now the **unadjasted** p-value function:
-```{r,eval=F}
-plot(x=grid, y=p.vals, type="l", main="Unadjasted p-value function")
-```
+This technique allows you to perform a two sample t-test AND to impute a rejection of the null to some parts of the domain. 
+
+The philosophy is similar to the one of post-hoc tests, but instead of checking components, I am checking intervals of the domain of the functional datum,
 
 
+### IWT test for two populations
 
-
-Let's load the package
+We know compare Paris and Milan. Let us now use a Fourier basis for the smoothing.
 
 ```{r}
-#devtools::install_github("alessiapini/fdatest")
-library(fdatest)
+# Performing the ITP
+ITP.result <- ITP2fourier(NASAtemp$milan,
+                          NASAtemp$paris,maxfrequency=20,B=1000,
+                          paired=TRUE  # you answer: why?
+                          )
+
+# Plotting the results of the ITP
+plot(ITP.result,main='NASA data',xrange=c(1,365),xlab='Day')
+# Plotting the p-value heatmap
+ITPimage(ITP.result,abscissa.range=c(1,365))
+# Selecting the significant coefficients
+which(ITP.result$corrected.pval < 0.05)
 ```
 
-And let's run the test: I will show just a 2 sample case, very simple and straightforward...
+
+### IWT ANOVA
+
+
+We can also plot the ANOV.
+
+Remember to choose method `"responses"`: this implementes the permutations of the groups.
 
 ```{r}
+temperature <- rbind(NASAtemp$milan,NASAtemp$paris)
+groups <- c(rep(0,22),rep(1,22))
+# Performing the ITP
+ITP.result <- ITPaovbspline(temperature ~ groups,
+                            B=1000,nknots=20,order=3,
+                            method="responses")
+# Summary of the ITP results
+summary(ITP.result)
+# Plot of the ITP results
+plot(ITP.result)
+# All graphics on the same device
+plot(ITP.result,
+     main='NASA data', plot.adjpval = TRUE,xlab='Day',xrange=c(1,365)
+)
 
-tst=IWT2(t(data$hgtm),t(data$hgtf))
-plot(tst)
 
 ```
 
-This technique allows you to perform a two sample t-test AND to impute a rejection of the null to some parts of the domain. (shadings represent significance values, dark grey is 1%, light is 5%).
-The philosophy is similar to the one of post-hoc tests, but instead of checking components, I am checking intervals of the domain of the functional datum
+### IWT for functional regression
 
 
+ The function implements the Interval Testing Procedure for testing the
+significance of the effects of scalar covariates on a functional population evaluated on a uniform grid.
 
-TODO
-* Domanda anno scorso 
-* fda regression
-* functional ANOVA (classes) - regression
-* independence test
-* fdahotelling for the test statistic
+That is, the response is functional; and the regressor is a scalar (either continuous or categorical)
+
+
+```{r}
+# Performing the ITP
+ITP.result <- ITPlmbspline(temperature ~ groups,B=1000,nknots=20)
+# Summary of the ITP results
+summary(ITP.result)
+# Plot of the ITP result
+plot(ITP.result,main='NASA data', plot.adjpval = TRUE,xlab='Day',xrange=c(1,365))
+# All graphics on the same device
+plot(ITP.result,main='NASA data', plot.adjpval = TRUE,xlab='Day',xrange=c(1,365))
+
+```
+
+
+### Further examples
+
+You also saw in class an example about climate change: [this](https://arxiv.org/pdf/2306.07738) is the paper, and [here](https://github.com/NoeDebrois/NPS-Project-2023-2024) you can find an implementation students from last year did. 
+
+
