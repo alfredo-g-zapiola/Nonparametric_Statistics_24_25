@@ -1372,7 +1372,7 @@ for(perm in 1:B){
   permutation.x <- sample(n)
   permutaiton.y <- sample(n)
   T0.perm.distrib[perm] <- cor(data[permutation.x,1], 
-                               data[permutaiton.y,2])
+                                 data[permutaiton.y,2])^2
   }
 
 sum(T0.perm.distrib >=T0)/B

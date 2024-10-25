@@ -931,7 +931,7 @@ hist(W.sim, xlim=c(-n*(n+1)/2, n*(n+1)/2), breaks = 50)
 abline(v = W, col='red')
 abline(v = 0, lwd=3)
 
-sum(W >= W.sim)/B
+sum(W <= W.sim)/B
 
 ```
 
