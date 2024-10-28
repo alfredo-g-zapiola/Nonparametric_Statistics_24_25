@@ -1,0 +1,17 @@
+---
+title: "Lab 07 - Bootstrap tests"
+author: "Nonparametric Statistics A.Y. 2024-2025"
+date: 2024-10-29
+output:
+  html_document: 
+    df_print: paged
+    toc: true
+  pdf_document: default
+  word_document: default
+editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+
