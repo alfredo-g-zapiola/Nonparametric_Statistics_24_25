@@ -36,7 +36,6 @@ library(ISLR2)
 library(car)
 ```
 
-## Nonparametric Regression
 
 Let us familiarize with the dataset we will be using. It is something
 you should remember quite well: the Wage dataset by the amazing *An Introduction to Statistical Learning* book, since August 2021 at its
@@ -57,10 +56,11 @@ some kind of reverse bathtub behavior. What happens if I try to model it
 linearly?
 
 ```{r}
-m_linear=lm(wage ~ age)
+m_linear=lm(wage ~ 1 + age)
 summary(m_linear)
 
 age.grid=seq(range(age)[1],range(age)[2],by=0.5)
+# alternative age.grid <- seq(min(age), max(age), length.out=100)
 preds=predict(m_linear,list(age=age.grid),se=T)
 se.bands=cbind(preds$fit +2* preds$se.fit ,preds$fit -2* preds$se.fit)
 plot(age ,wage ,xlim=range(age.grid) ,cex =.5, col =" darkgrey ",main='Linear Fit')
@@ -83,7 +83,7 @@ res_manual <- y.hat - wage
 Cov_beta <- sum(res_manual^2)/(N-2)*solve(crossprod(X))
 X_grid <- cbind(1,age.grid)
 preds_manual_fit <- c(X_grid%*%beta_manual)
-preds_manual_fit_se <- sqrt(sapply(1:nrow(X_grid), function(i) t(X_grid[i,])%*%Cov_beta%*%X_grid[i,]))
+  preds_manual_fit_se <- sqrt(sapply(1:nrow(X_grid), function(i) t(X_grid[i,])%*%Cov_beta%*%X_grid[i,]))
 
 ```
 
@@ -183,7 +183,7 @@ plot(qnorm(ppoints(n = N)),sort(rstandard(lm_4)))
 abline(a = 0,b = 1,col="red")
 
 # 3
-plot(lm_4$fitted.values,sqrt(abs(rstandard(lm_4))))
+plot(x=lm_4$fitted.values,y=sqrt(abs(rstandard(lm_4))))
 
 # 4
 #XX <- model.matrix(lm_4)
@@ -233,6 +233,7 @@ se.bands.logit = cbind(preds$fit +2* preds$se.fit , preds$fit -2*
                          preds$se.fit)
 
 se.bands = exp(se.bands.logit)/(1+ exp(se.bands.logit))  # same for std errors
+#se.bands <- sapply(se.bands.logit, FUN=logistic)
 
 plot(age ,I(wage >250) ,xlim=range(age.grid) ,type ="n",ylim=c(0 ,.2) )
 points (jitter (age), I((wage >250) /5) ,cex =.5, pch ="|",
@@ -281,7 +282,10 @@ Cutpoint maybe around $10000$? How do we do that?
 
 ```{r}
 head(Prestige$income)
-head(with(Prestige, cut(income,breaks = c(min(income),10000,max(income)))))
+attach(Prestige)
+head(
+       cut(income, breaks = c(min(income),10000,max(income))))
+detach(Prestige)
 ```
 
 Then it boils down to fit an lm with this new variable
@@ -427,11 +431,12 @@ $$
 
 
 ```{r message=FALSE, warning=FALSE}
-m_loc = npreg(prestige ~ income,
+m_loc = with(Prestige,
+             npreg(prestige ~ income,
               ckertype = 'uniform',
-              bws = 3200, # bandwidth
-              data = Prestige)
-
+              bws = 3200) # bandwidth
+              #data = Prestige)
+)
 income_newdata <- data.frame(income=with(Prestige,
                                       seq(range(income)[1],range(income)[2],by=0.5))
                   )
@@ -687,6 +692,9 @@ We can easily consider polynomials that go beyond the first degree:
 ```{r}
 
 model_cut_quad <- lm(prestige ~ poly(income,degree = 2) + income_cut_model + I(income>cutoff),  data=Prestige)
+# non-constrained alternative: (so different betas for the squared term)
+model_cut_quad <- lm(prestige~poly(income, degree=2, raw=F)*income_cut, data=Prestige)
+
 preds=predict(model_cut_quad,new_data,se=T)
 se.bands=cbind(preds$fit +2* preds$se.fit ,preds$fit -2* preds$se.fit)
 
