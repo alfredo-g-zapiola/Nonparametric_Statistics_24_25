@@ -1,0 +1,607 @@
+---
+title: "Lab 09 - Quantile Regression"
+date: 2024-11-22
+author: "Nonparametric statistics AY 2024/2025"
+output:
+  html_document: 
+    df_print: paged
+    toc: true
+  editor_options: 
+  chunk_output_type: console
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+require("quantreg")
+# install BLossom package... 
+```
+
+## Why use QR
+
+
+Mosteller and Tukey (1977) noted that it was possible to fit regression curves to
+other parts of the distribution of the response variable, but that this was rarely done, and therefore most regression analyses gave an incomplete picture of the relationships between variables. 
+
+
+
+
+In OLS (ordinary least squares), we make a linear model to estimate the mean of $\mathbb{E}[Y|X=x]$, that is the mean of ($Y$ conditional on $X$).
+
+However, estimated effects of measured factors (X) may not be well represented just by changes in means.
+
+For example, say we have heteroskedasticity:
+
+```{r}
+# Create data frame
+hours <- runif(100, 1, 10)
+score <- 60 + 2 * hours + rnorm(100, mean = 0, 
+                                sd = 0.45 * hours) # residuals' variance depends as well on treatment
+df <- data.frame(hours, score)
+```
+We can fit a linear model and check the diagnostics
+```{r}
+fit.linear <- lm(score ~ hours)
+plot(fit.linear)
+```
+
+The big problem is, **even if we do not assume any parametric form on the distribution of the residuals, they are not i.i.d**, so even our nonprametric inference tools fail!
+
+```{r}
+# Quantile regression
+quant_reg_25 <- rq(score ~ hours, data = df, tau = 0.25)
+quant_reg_50 <- rq(score ~ hours, data = df, tau = 0.5)
+quant_reg_75 <- rq(score ~ hours, data = df, tau = 0.75)
+purrr::map(list(quant_reg_25, quant_reg_50, quant_reg_75), broom::tidy)
+```
+
+```{r}
+# Scatter plot with regression lines
+# Scatter plot with regression lines
+plot(df$hours, df$score, 
+     main = "Quantile Regression: Hours vs. Score (Heteroskedastic)", 
+     xlab = "Hours", ylab = "Score")
+abline(a = coef(quant_reg_25), 
+       b = coef(quant_reg_25)["hours"], 
+       col = "red", lty = 2)
+abline(a = coef(quant_reg_50), 
+       b = coef(quant_reg_50)["hours"], 
+       col = "blue", lty = 2)
+abline(a = coef(quant_reg_75), 
+       b = coef(quant_reg_75)["hours"], 
+       col = "green", lty = 2)
+legend("topleft", legend = c("Quantile 0.25", "Quantile 0.5", "Quantile 0.75"),
+       col = c("red", "blue", "green"), lty = 2)
+```
+
+Had the residuals been homoskedastic, since the intercept and regressor's coefficient (which we know from simulated data) are the same, the lines would have been parallel!
+
+Indeed:
+
+```{r}
+hours <- runif(100, 1, 10)
+score <- 60 + 2 * hours + rnorm(100, mean = 0, 
+                                sd = 2 ) # residuals' variance depends as well on treatment
+df <- data.frame(hours, score)
+quant_reg_25 <- rq(score ~ hours, data = df, tau = 0.25)
+quant_reg_50 <- rq(score ~ hours, data = df, tau = 0.5)
+quant_reg_75 <- rq(score ~ hours, data = df, tau = 0.75)
+
+# Scatter plot with regression lines
+plot(df$hours, df$score, 
+     main = "Quantile Regression: Hours vs. Score (Homoskedastic)", 
+     xlab = "Hours", ylab = "Score")
+abline(a = coef(quant_reg_25), 
+       b = coef(quant_reg_25)["hours"], 
+       col = "red", lty = 2)
+abline(a = coef(quant_reg_50), 
+       b = coef(quant_reg_50)["hours"], 
+       col = "blue", lty = 2)
+abline(a = coef(quant_reg_75), 
+       b = coef(quant_reg_75)["hours"], 
+       col = "green", lty = 2)
+legend("topleft", legend = c("Quantile 0.25", "Quantile 0.5", "Quantile 0.75"),
+       col = c("red", "blue", "green"), lty = 2)
+```
+
+Note **there are** models that deal with heteroskedasticity explicitly, namely the **location-scale** models, and the **generalised linear models**.
+
+1. Location-scale model. An example would be:
+$$
+y_i = \mathbf{x}_i^\intercal\mathbf{\beta}  +  (\mathbf{x}_i^\intercal\mathbf{\gamma})\epsilon_i
+$$
+But the problem is that one has to specify a model for the heteroskedasticity: what if a regressor is not included? Hence they are quite susceptible to model misspecification.
+
+2. Generalised Linear Models. By choosing a specific distribution from the exponential family, they offer alternative ways to link a treatment/regressor ($\mathbf{X}$) with a response variable. But again, these model only a **conditional mean** and are again subject to model misspecification.
+
+
+#### Other advantages of QR
+* **An advantage of using quantile regression to model heterogeneous variation in response distributions is that no specification of how variance changes are linked to the mean is required, nor is there any restriction to the exponential family of distributions.**
+* **Complicated changes in central tendency, variance, and shape of distributions are common in statistical models applied to observational data because of model misspecification.**
+* And, again, there are **no parametric assumptions on the distributions of residuals**!
+
+
+
+
+
+* log transformation example
+* invert ranksonce
+* samole from asymptottic distrib to get that 
+
+
+
+
+
+
+
+
+
+## How QR works
+
+Goal: estimate rates of change in all parts (not just mean) of the distribution of a response variable.
+
+How do we achieve this? At each quantile $\tau$ of $Y|X$ we are interested in, we solve an optimisation problem.
+
+
+Recall that in OLS, we have that the estimated coefficient vector minimises the squared residuals, i.e.
+
+$$
+\mathbf{\hat{\beta}}_{OLS} = \underset{\beta \in \mathbb{R}^p}{\operatorname{argmin}} \sum_{i=1}^N (y_i-\mathbf{x}_i^T\mathbf{\beta})^2
+$$
+In Quantile regression, we have:
+
+$$
+\underset{\beta \in \mathbb{R}^p}{\operatorname{argmin}} \sum_{i=1}^N  \rho_\tau(y_i-\mathbf{x}_i^T\mathbf{\beta})
+$$
+where $\rho_\tau(.)$ is the loss function associated to the $\tau$th quantile regression.
+
+$$
+\rho_{\tau}(u) = u (\tau - \mathbb{I}_{\{u<0\}})  
+$$
+We can visualise them:
+```{r}
+ols.loss <- function(eps){eps**2}
+qr.loss <- function(eps, tau){eps*(tau - (eps<0))}
+
+x.grid <- seq(-1, 1, length.out=100)
+
+plot(x=x.grid, sapply(x.grid, FUN=ols.loss))
+cols <- rainbow(5)
+taus <-seq(.1, .9, length.out=5)
+for (i in 1:length(taus) ){
+  lines(x=x.grid, y=sapply(x.grid, FUN=qr.loss, tau=taus[i]), col=cols[i])
+}
+
+```
+
+Notably, with $\tau=0.5$ we get the loss function for the Least Absolute Deviation regression.
+
+### Sample quantile
+
+
+Objective function
+$$
+min \sum_{i=1}^n  \rho_\tau (y_i - \xi)
+$$
+Reformulation as linear program
+
+$$
+min \{ \tau \mathbb{1}_n^{\intercal}\mathbb{u}^+ + (1-\tau) \mathbb{1}_n^{\intercal}\mathbb{u}^- \}
+\\
+st. \\
+\mathbf{y} = \mathbf{1}_m\xi + \mathbf{u} -\mathbf{v}
+$$
+Note that . In optimisation jargon, these are the slack variables. 
+Using the same notation as in the lectures, we have:
+
+
+
+
+And we can solve it with the simplex method!
+
+Set the problem in matricial notation
+```{r}
+library(boot)
+data("engel")
+engel <- engel#[1:9,]
+tau <- .5
+n <- nrow(engel)
+costs <- c( 0, rep(tau, n), rep(1-tau, n)) 
+y <- engel$foodexp
+A.tilde <- matrix(0, nrow=n, ncol=1+2*n)
+A.tilde[,1] <- 1
+A.tilde[, 2:(n+1)] <- diag(x=1, nrow=n)
+A.tilde[, (n+2):(2*n+1)] <- diag(x=-1, nrow=n)
+```
+
+Use the simplex method to obtain the minimum!
+
+```{r}
+optimisation <- simplex(a = costs, 
+        A3 = A.tilde,
+        b3 = y
+      )
+optimisation
+```
+```{r}
+quantile(y, .5)
+```
+
+
+We now formulate its dual (check Prof.ssa Ieva's slides)
+
+$$
+
+\max \mathbf{y}^{\intercal}\mathbf{\lambda}
+\\ s.t. \\
+A^{\intercal}\mathbf{\lambda} + \mathbf{u} - \mathbf{v} = \mathbf{c} 
+\\ \mathbf{u}, \mathbf{v} \in \mathbb{R}^n_+ 
+
+$$
+
+which by applying the definitions can be rewritten as:
+
+$$
+\max \{ \mathbb{y}^{\intercal}\mathbf{\lambda} \}
+\\ s.t. \\
+\mathbf{1}_n^{\intercal}\mathbf{\lambda}  = (1-\tau)
+\\
+\mathbf{\lambda} \in [0,1]^n
+
+$$
+And now the dual:
+
+```{r,eval=F}
+costs.dual <- y
+A.dual <- matrix(1, nrow=1, ncol=length(y))
+b.dual <- as.vector(1 - tau)
+
+optim.dul <- simplex(a = costs.dual, 
+                     A3 = A.dual,
+                     b3 = b.dual)
+
+```
+
+
+TODO comparison
+```{r}
+
+```
+
+
+**While the primal problem  may be viewed as generating the sample quantiles, the corresponding dual problem may be seen to generate the order statistics, or perhaps more precisely the ranks of the observations**
+
+
+
+
+## Quantile regression
+
+
+Objective function
+$$
+min \sum_{i=1}^n  \rho_\tau (y_i - x_i^{\intercal}\beta)
+$$
+Observe:
+
+plot loss functions TODO
+
+Reformulation as linear program
+
+$$
+min \{ \tau \mathbb{1}_n^{\intercal}\mathbb{u}^+ + (1-\tau) \mathbb{1}_n^{\intercal}\mathbb{u}^- \}
+\\
+st. \\
+ \mathbb{X}\mathbb{\beta} + \mathbf{u} -\mathbf{v} =\mathbf{y}
+$$
+
+
+TODO canconical form
+
+* $\tilde{\mathbf{x}}$ the vector of variables
+* $\mathbf{c}$ vector of costs
+* \mathbf{}
+
+
+```{r}
+data("engel")
+engel <- engel#[1:5,]
+tau <- .5
+X <- cbind(1, engel$income)  # design matrix, include intercept!
+y <- engel$foodexp
+n <- nrow(engel)
+costs <- c( rep(0, ncol(X)), rep(tau, n), rep(1-tau, n)) 
+
+A.tilde <- matrix(0, nrow=n, ncol= ncol(X)+2*n)  # two columns in X, positive residuals and negative residuals
+A.tilde[,1:ncol(X)] <- X
+
+A.tilde[, ncol(X)+(1:n)] <- diag(x=1, nrow=n)
+A.tilde[, -( 1:(ncol(X)+n) )] <- diag(x=-1, nrow=n)
+#A.tilde
+```
+```{r}
+optimisation <- simplex(a = costs, 
+        A3 = A.tilde,
+        b3 = y
+      )
+#optimisation
+```
+```{r}
+qreg <- rq(foodexp~income,tau=.5, data=engel)
+qreg
+```
+Compare value of the objective functions
+```{r}
+
+```
+
+
+
+```{r}
+residuals.simplex <- optimisation$soln[1:n + ncol(X)] - 
+  optimisation$soln[(ncol(X)+n+1):(ncol(X)+2*n) ]
+residuals.simplex
+```
+```{r}
+
+```
+
+
+
+
+
+
+Intrpretataion: todo
+Primal problem: generates sample quantiels
+Dual problem: generates order statistics (ranks o)
+
+Moreover, being it a linear mathematical program, **strong duality holds**: a solution of the primal (if it not unbounded) has the same objective function value as the dual (note the proof is trivial, cfr. TODO)
+
+Indeed, the optimal lagrange multipliers $\mathbb{lambda}$ in the primal problem are the optimal variables in the dual problem, while the optimal lagrange multipliers in teh dual problem are the optimal variables in the primal problem
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+Regression rankscore tests play the role of Lagrange multiplier, or score,
+tests in quantile regression
+
+
+
+* Linear programming (interpolatioN?)
+
+* perché intervallo
+n 
+* monotonic transformation: logarithmic scale TODO without loss of information
+* estimates as step function
+
+
+## Quantile Regressio
+
+* Homogeneous and heterogeneous
+* Estimates are for intervals of quantiles
+* Sampling variation
+* 
+
+
+
+```{r}
+fit1 <- rq(foodexp ~ income, tau = .5, data = engel)
+summary(fit1, se="rank")
+```
+
+
+```{r}
+attach(engel)
+xx <- income - mean(income)
+fit1 <- summary(rq(foodexp~xx, tau=2:98/100))
+fit2 <- summary(rq(foodexp~xx,tau=c(.05, .25, .5, .75, .95)))
+
+
+plot(fit1,mfrow = c(1,2))
+```
+
+
+```{r}
+plot(income,foodexp,cex=.25,type="n",xlab="Household Income", ylab="Food Expenditure")
+points(income,foodexp,cex=.5,col="blue")
+abline(rq(foodexp~income,tau=.5),col="blue") 
+abline(lm(foodexp~income),lty=2,col="red") #the dreaded ols line
+taus <- c(.05,.1,.25,.75,.90,.95)
+
+for( i in 1:length(taus)){
+ abline(rq(foodexp~income,tau=taus[i]),col="gray")
+}
+
+```
+To see all different quantile regressions:
+```{r}
+z <- rq(foodexp~income,tau=-1, data=engel)
+plot(z)
+ranks(z, score="wilcoxon")
+#rq.test.rank(z)
+```
+
+
+## Inference for quantile regression 
+
+
+```{r}
+attach(engel)
+fit1 <- rq(foodexp~income,tau=.25)
+fit2 <- rq(foodexp~income,tau=.50)
+fit3 <- rq(foodexp~income,tau=.75)
+```
+
+ suppose that we wanted to test that the slopes
+were the same at the three quartiles
+
+```{r}
+?anova.rq
+```
+
+```{r}
+
+anova(fit1, fit2, fit3) #, test="rank")
+
+```
+
+
+```{r}
+data("engel")
+attach(engel)
+x.poor <- quantile(income,.1) #Poor is defined as at the .1 quantile of the sample distn
+x.rich <- quantile(income,.9) #Rich is defined as at the .9 quantile of the sample distn
+ps <- z$sol[1,]
+qs.poor <- c(c(1,x.poor)%*%z$sol[4:5,])
+qs.rich <- c(c(1,x.rich)%*%z$sol[4:5,])
+ #now plot the two quantile functions to compare
+par(mfrow = c(1,2))
+plot(c(ps,ps),c(qs.poor,qs.rich), type="n",
+
+ xlab = expression(tau), ylab = "quantile")
+plot(stepfun(ps,c(qs.poor[1],qs.poor)), do.points=FALSE, add=TRUE)
+plot(stepfun(ps,c(qs.poor[1],qs.rich)), do.points=FALSE, add=TRUE,
+ col.hor = "gray", col.vert = "gray")
+ ## now plot associated conditional density estimates
+ ## weights from ps (process)
+ ps.wts <- (c(0,diff(ps)) + c(diff(ps),0)) / 2
+ ap <- akj(qs.poor, z=qs.poor, p = ps.wts)
+ ar <- akj(qs.rich, z=qs.rich, p = ps.wts)
+plot(c(qs.poor,qs.rich),c(ap$dens,ar$dens),type="n",
+
+ xlab= "Food Expenditure", ylab= "Density")
+lines(qs.rich, ar$dens, col="gray")
+lines(qs.poor, ap$dens, col="black")
+legend("topright", c("poor","rich"), lty = c(1,1), col=c("black","gray"))
+```
+
+#### Bootstrapping
+
+TODO paired bootstrap, residual bootstrap, rank test
+In applications, we are rarely confident about the iid error, location-shift
+model and so the residual bootstrap is of limited practical interest for quantile regression.
+
+Instead of drawing bootstrap samples from the empirical distribution of the
+residuals as we have just described, we may draw samples of the (x i , yi ) pairsfrom the joint empirical distribution of the sample. That is, (xi ∗ , y i ∗ ) is drawn with
+replacement from the $n$ pairs $\{(x: , y_i ) : i = 1, . . . , n\}$ of the original sample, each with probability $n^{-1}$. This form of the bootstrap has been widely used in
+applications of quantile regression.
+
+
+
+* paired bootstrap (perché non si puo' l'altro??)
+* rank score test?
+
+```{r, eval=F}
+
+# Compute the rank scores
+score <- ranks(v = fit1, score = "sign")
+
+# Compute the test statistic
+test_stat <- sum(score * (y - coef_qr1[1] - coef_qr1[2] * x))
+
+# Compute the p-value using a permutation test (e.g., 1000 permutations)
+p_value <- mean(test_stat > test_stat, replicate(1000))
+```
+
+```{r}
+data(stackloss)
+r <- ranks(rq(stack.loss ~ stack.x, tau=-1))
+```
+
+
+
+
+## Nonlinear Quantile Regression
+
+```{r}
+ n <- 200
+ df <- 8
+ delta <- 8
+ set.seed(4003)
+ x <- sort(rt(n,df))
+ u <- runif(n)
+ v <- -log(1-(1-exp(-delta))/(1+exp(-delta*pt(x,df))*((1/u)-1)))/delta
+ y <- qt(v,df)
+```
+
+
+
+
+
+```{r}
+
+"lprq" <- function(x, y, h, m=50 , tau=.5){
+ xx <- seq(min(x),max(x),length=m)
+ fv <- xx
+ dv <- xx
+ for(i in 1:length(xx)) {
+ z <- x - xx[i]
+ wx <- dnorm(z/h)
+ r <- rq(y~z, weights=wx, tau=tau, ci=FALSE)
+ fv[i] <- r$coef[1.]
+ dv[i] <- r$coef[2.]
+ }
+ list(xx = xx, fv = fv, dv = dv)
+}
+```
+
+
+```{r}
+plot(x,y,col="blue",cex = .25)
+us <- c(.25,.5,.75)
+for(i in 1:length(us)){
+u <- us[i]
+v <- -log(1-(1-exp(-delta))/
+(1+exp(-delta*pt(x,df))*((1/u)-1)))/delta
+lines(x,qt(v,df))
+}
+Dat <- NULL
+Dat$x <- x
+Dat$y <- y
+deltas <- matrix(0,3,length(us))
+FrankModel <- function(x,delta,mu,sigma,df,tau){
+z <- qt(-log(1-(1-exp(-delta))/
+(1+exp(-delta*pt(x,df))*((1/tau)-1)))/delta,df)
+mu + sigma*z
+}
+for(i in 1:length(us)){
+tau = us[i]
+fit <- nlrq(y~FrankModel(x,delta,mu,sigma,df=8,tau=tau),
+data=Dat,tau= tau, start=list(delta=5,
+mu = 0, sigma = 1),trace=TRUE)
+lines(x, predict(fit, newdata=x), lty=2, col="green")
+deltas[i,] <- coef(fit)
+}
+
+```
+
+
+#### Splines
+```{r}
+library(splines)
+library(MASS)
+data(mcycle)
+attach(mcycle)
+plot(times,accel,xlab = "milliseconds", ylab = "acceleration",type="n")
+points(times,accel,cex = .75)
+X <- model.matrix(accel ~ bs(times, df=15))
+for(tau in 1:3/4){
+ fit <- rq(accel ~ bs(times, df=15), tau=tau, data=mcycle)
+ accel.fit <- X %*% fit$coef
+ lines(times,accel.fit)
+}
+```
+
