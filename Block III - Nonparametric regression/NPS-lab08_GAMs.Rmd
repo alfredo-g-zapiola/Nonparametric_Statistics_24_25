@@ -331,6 +331,7 @@ with(Prestige,
 ```
 
 ```{r}
+x11()
 plot(model_gam_tp)
 ```
 
@@ -586,12 +587,21 @@ plot(fit_gam)
 ```
 
 # Remove weight
+```{r}
 fit_gam_reduced_1 <- gam(log(surv.time)~s(prod,bs = "cr")+location,data = bee)
 anova(fit_gam_reduced_1,fit_gam, test = "F")
 
+```
+
+
 # Remove prod
+```{r}
+
 fit_gam_reduced_2 <- gam(log(surv.time)~location,data = bee)
 anova(fit_gam_reduced_2, fit_gam_reduced_1, test = "F")
+```
+
+
 ```
 
 I can use a simple linear model with just a term: location. No need to
@@ -599,7 +609,7 @@ use the gam machinery anymore.
 
 ```{r}
 fit_lm <- lm(log(surv.time)~location,data = bee)
-
+```
 # Avg log surv time in Milan
 sum(fit_lm$coefficients)
 # mean(log(bee$surv.time[bee$location=="Milan"])) # alternatively

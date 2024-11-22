@@ -848,6 +848,8 @@ quad_spline <- bs(splines_grid, df=8, degree = 2)
 cub_spline <- bs(splines_grid, df=9, degree = 3)
 
 knots_splines <- attributes(lin_spline)$knots
+attributes(quad_spline)$knots
+all.equal(attributes(quad_spline)$knots, attributes(lin_spline)$knots)
 
 par(mfrow=c(3,1))
 plot(lin_spline[,1]~splines_grid, ylim=c(0,max(lin_spline)), type='l', lwd=2, col=1, 
