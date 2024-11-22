@@ -1786,8 +1786,8 @@ distributions of residuals</strong>!</li>
 </div>
 <div id="how-qr-works" class="section level2">
 <h2>How QR works</h2>
-<p>Goal: estimate rates of change in all parts (not just the meanmean)
-of the distribution of a response variable.</p>
+<p>Goal: estimate rates of change in all parts (not just the mean) of
+the distribution of a response variable.</p>
 <p>How do we achieve this? At each quantile <span class="math inline">\(\tau\)</span> of <span class="math inline">\(Y|X\)</span> we are interested in, we solve an
 optimisation problem.</p>
 <p>Recall that in OLS, we have that the estimated coefficient vector
@@ -1980,7 +1980,7 @@ all.equal(as.vector(residuals.simplex), as.vector(qreg$residuals))</code></pre>
 <pre><code>## [1] TRUE</code></pre>
 <p><strong>Exercise</strong>: obtain the value of the objective function
 using the values available in <code>qreg</code></p>
-<pre class="r"><code># lo facciamo assieme in classe</code></pre>
+<pre class="r"><code># lo facciamo assieme a lezione</code></pre>
 </div>
 </div>
 <div id="quantile-regression-with-the-quantreg-package" class="section level2">
@@ -1989,7 +1989,7 @@ using the values available in <code>qreg</code></p>
 package.</p>
 <p>With the <code>summary</code> method, we get a detailed account on
 how the model was fit. The confidence intervals are computed with
-rankscore test inversion (cfr. the <code>Inference</code> section)</p>
+rankscore test inversion (cfr. the <code>Inference</code> section).</p>
 <pre class="r"><code>fit1 &lt;- rq(foodexp ~ income, tau = .5, data = engel)
 summary(fit1,
         se=&quot;rank&quot; # default argument

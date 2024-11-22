@@ -125,7 +125,7 @@ But the problem is that one has to specify a model for the heteroskedasticity: w
 
 ## How QR works
 
-Goal: estimate rates of change in all parts (not just the meanmean) of the distribution of a response variable.
+Goal: estimate rates of change in all parts (not just the mean) of the distribution of a response variable.
 
 How do we achieve this? At each quantile $\tau$ of $Y|X$ we are interested in, we solve an optimisation problem.
 
@@ -327,7 +327,7 @@ all.equal(as.vector(residuals.simplex), as.vector(qreg$residuals))
 **Exercise**: obtain the value of the objective function using the values available in `qreg`
 
 ```{r}
-# lo facciamo assieme in classe
+# lo facciamo assieme a lezione
 ```
 
 
@@ -335,7 +335,7 @@ all.equal(as.vector(residuals.simplex), as.vector(qreg$residuals))
 
 We continue the lab with the usag of the `quantreg` package.
 
-With the `summary` method, we get a detailed account on how the model was fit. The confidence intervals are computed with rankscore test inversion (cfr. the `Inference` section)
+With the `summary` method, we get a detailed account on how the model was fit. The confidence intervals are computed with rankscore test inversion (cfr. the `Inference` section).
 
 ```{r}
 fit1 <- rq(foodexp ~ income, tau = .5, data = engel)
