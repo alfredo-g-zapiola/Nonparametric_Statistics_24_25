@@ -564,10 +564,10 @@ polygon(circle_points,border='green')
 
 Let us consider now the particular case of regression, where the point predictor for a new observation $Y_{n+1}$ of the response variable is given by the OLS estimate obtained on the training data, applied to the observed predictors $X_{n+1}$. We compare the prediction intervals obtained under parametric assumptions with those obtained via conformal inference in the split conformal fashion.
 
-The key idea in the split conformal framework is to compute a conformity score for each observation, measuring the discrepancy between the true value of Y and that predicted
-by the linear model. The model fitted on the training data is then applied to hold-out calibration samples, producing a collection of conformity scores. As all data points are exchangeable, the empirical distribution of the calibration scores can be leveraged to make predictive inferences about the conformity score of a new test point. Finally, inverting the function defining the conformity scores yields a prediction set for the test $Y_{n+1}$.
+The key idea in the split conformal framework is to compute a conformity score for each observation in the calibration set, measuring the discrepancy between the true value of Y and that predicted
+by the linear model. The model fitted on the training data is applied to hold-out calibration samples, producing a collection of conformity scores. As all data points are exchangeable, the empirical distribution of the calibration scores can be leveraged to make predictive inferences about the conformity score of a new test point. Finally, inverting the function defining the conformity scores yields a prediction set for the test $Y_{n+1}$.
 
-Inthe following, we will consider cases when the parametric assumptions are met, and cases when the parametric assumptions are violated.
+In the following, we will consider cases when the parametric assumptions are met, and cases when the parametric assumptions are violated.
 
 To generate each scenario, we will resort the following data generation function:
 
@@ -605,7 +605,7 @@ sample_data <- function(model=c("homoscedastic", "heavy-tailed", "heteroscedasti
 We generate data from a toy model with one explanatory variable and one response variable.
 
 ```{r}
-seed <- 2024
+seed <- 2023
 n <- 1000
 
 data <- sample_data(model="homoscedastic", n, seed)
