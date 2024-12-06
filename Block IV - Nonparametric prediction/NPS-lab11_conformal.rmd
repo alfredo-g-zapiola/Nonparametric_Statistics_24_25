@@ -291,7 +291,7 @@ Let us sample the data from a bimodal distribution, and repeat the construction 
 
 * the absolute value of the difference from the mean,
 
-* the average eucledian distance from the k-nearest neighbors.
+* the average euclidean distance from the k-nearest neighbors.
 
 We aim to assess how the amplitude of the prediction set changes when adopting one or the other non-conformity measure.
 
@@ -321,7 +321,7 @@ index_in <- pval_fun>alpha
 PI.abs <- range(test_grid[index_in])
 ```
 
-#### Average eucledian distance from the K-nn
+#### Average euclidean distance from the K-nn
 
 ```{r}
 wrapper_knn <- function(grid_point,y){
@@ -354,7 +354,7 @@ legend("topright", legend=c("PI abs", "PI k-nn"), col=c("blue", "darkred"),
 
 ```
 
-Again, one might repeat the experiment to check that the conformal PI with the k-nn mean eucledian distance is consistently more efficient than the competitor, though both being valid.
+Again, one might repeat the experiment to check that the conformal PI with the k-nn mean euclidean distance is consistently more efficient than the competitor, though both being valid.
 
 ```{r}
 alpha <- .1
@@ -515,7 +515,7 @@ ncm_sort=c(sort(ncm),Inf)
 d=ncm_sort[ceiling((n/2 + 1)*(1-alpha))]
 ```
 
-The prediction set in this case is identified by the portion of the plane where $d_euc(\mu,y)>d$. This becomes evident (at least visually) if we plot the bivariate prediction set.
+The prediction set in this case is identified by the portion of the plane where $d_{\mathrm{euc}}(\mu,y)>d$. This becomes evident (at least visually) if we plot the bivariate prediction set.
 
 ```{r}
 plot(y_biv,xlim = c(-10,10),ylim = c(-10,10))
