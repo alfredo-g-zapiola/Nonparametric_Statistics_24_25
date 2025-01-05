@@ -579,9 +579,6 @@ rho <- 0.5 # train and calibration split ratio
 
 alpha = 0.1
 
-l <- dim(dataset)[1] - ceiling(dim(dataset)[1] * rho)
-alpha_rag <- c(seq(1/(l+1), l/(l+1), 1/(l+1)))
-
 fun=mean_lists()
 x0=list(as.list(x.grid))
 
@@ -604,9 +601,6 @@ f_data <- fData(x.grid, dataset)
 rho <- 0.5 # train and calibration split ratio
 
 alpha = 0.1
-
-l <- dim(dataset)[1] - ceiling(dim(dataset)[1] * rho)
-alpha_rag <- c(seq(1/(l+1), l/(l+1), 1/(l+1)))
 
 fun=mean_lists()
 x0=list(as.list(x.grid))
